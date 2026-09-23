@@ -218,13 +218,20 @@
 
   function joinBanner() {
     var url = (you && you.joinUrl) || 'https://madamsofwilbea.github.io/madams-app-form/';
-    var why = (you && /different email/i.test(you.reason || ''))
-      ? 'We found that handle but under a different email address. Use the email you joined with, or fill in the form again with this one.'
-      : 'We couldn\u2019t find you in our membership list yet.';
-    return '<div class="join"><div class="join-t">Not on our list yet</div>' +
-           '<p class="join-b">' + esc(why) + ' You can still vote \u2014 your answers are saved. ' +
-           'Fill in the membership form, and an admin will confirm you so your votes count.</p>' +
-           '<a class="btn" style="margin-top:12px" href="' + url + '">Fill in the membership form</a></div>';
+    var mismatch = you && /different email/i.test(you.reason || '');
+    var title = mismatch ? 'Close, Madam \u2014 but not quite' : 'We can\u2019t find your name, Madam';
+    var body = mismatch
+      ? 'We found that handle, but it\u2019s filed under a different email. Try the one you joined with \u2014 ' +
+        'or if that inbox is long gone (we\u2019ve all had a 2009 email we\u2019d rather forget), just send the form again with this one.'
+      : 'Now, before anyone panics: we are absolutely not calling you a stranger. Two things are far more likely. ' +
+        'Either you\u2019re new here \u2014 in which case, welcome to the FANMILY, we\u2019re so glad you came \u2014 ' +
+        'or you\u2019ve been with us since the very beginning, back when our \u201Cdatabase\u201D was a group chat and a lot of good intentions. ' +
+        'If that\u2019s you: hello, tita, and sorry. That one\u2019s on us.';
+    return '<div class="join"><div class="join-t">' + title + '</div>' +
+           '<p class="join-b">' + body + '</p>' +
+           '<p class="join-b" style="margin-top:9px">Either way, your vote is safely saved \u2014 nothing is lost. ' +
+           'Take one minute to fill in the form so we can tick you off properly, and an admin will make your vote count. \uD83D\uDC9A</p>' +
+           '<a class="btn" href="' + url + '">' + (mismatch ? 'Update my details' : 'Put me on the list') + '</a></div>';
   }
 
   function head(label) {
