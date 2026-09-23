@@ -95,6 +95,14 @@
   .bar i{display:block;height:9px;background:var(--green);border-radius:99px}
   .bar i.top{background:var(--gold)}
 
+  .tick{
+    width:52px;height:52px;margin:2px auto 12px;border-radius:50%;
+    background:var(--green);color:#fff;font-size:26px;line-height:52px;font-weight:900;
+  }
+  .thanks-t{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--forest);margin-bottom:9px}
+  .picked{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:13px 0 4px}
+  .picked span{font-size:14px;font-weight:700;color:#23472C;background:#FBF4E4;border:1.5px solid var(--gold);border-radius:99px;padding:7px 14px}
+
   .suggest-cta{text-align:center;margin-top:20px;padding-top:18px;border-top:1px solid rgba(218,167,90,.45)}
   .suggest-b{font-family:'Playfair Display',serif;font-size:16px;color:var(--forest)}
   select{width:100%;padding:12px 13px;font-family:inherit;font-size:15px;color:#14261C;background:#fff;border:1px solid #E4DECB;border-radius:11px;outline:none}
@@ -228,14 +236,14 @@
   function joinBanner() {
     var url = (you && you.joinUrl) || 'https://madamsofwilbea.github.io/madams-app-form/';
     var mismatch = you && /different email/i.test(you.reason || '');
-    var title = mismatch ? 'Close, Madam \u2014 but not quite' : 'We can\u2019t find your name, Madam';
+    var title = mismatch ? 'So close, Fam \u2014 but not quite' : 'We can\u2019t find your name, Fam';
     var body = mismatch
       ? 'We found that handle, but it\u2019s filed under a different email. Try the one you joined with \u2014 ' +
         'or if that inbox is long gone (we\u2019ve all had a 2009 email we\u2019d rather forget), just send the form again with this one.'
       : 'Now, before anyone panics: we are absolutely not calling you a stranger. Two things are far more likely. ' +
         'Either you\u2019re new here \u2014 in which case, welcome to the FANMILY, we\u2019re so glad you came \u2014 ' +
         'or you\u2019ve been with us since the very beginning, back when our \u201Cdatabase\u201D was a group chat and a lot of good intentions. ' +
-        'If that\u2019s you: hello, tita, and sorry. That one\u2019s on us.';
+        'If that\u2019s you: hello, OG, and sorry. That one\u2019s on us.';
     return '<div class="join"><div class="join-t">' + title + '</div>' +
            '<p class="join-b">' + body + '</p>' +
            '<p class="join-b" style="margin-top:9px">Either way, your vote is safely saved \u2014 nothing is lost. ' +
@@ -339,13 +347,46 @@
     votes[p.id] = picked; notes[p.id] = note;
 
     btn.disabled = true; btn.textContent = 'Sending…';
+    polls[i].mine = { answer: picked, notes: note };
     post({ handle: me.handle, email: me.email, votes: JSON.stringify(votes), notes: JSON.stringify(notes) }, function () {
-      polls[i].mine = { answer: picked, notes: note };
-      var tail = (you && you.member === false)
-        ? ' It will count once an admin confirms your membership.'
-        : ' You can change it until the poll closes.';
-      load('Your vote on \u201C' + p.question + '\u201D is in.' + tail);
+      refresh();            // quietly bring the page up to date in the background
     });
+    showThanks(p, picked);  // but confirm straight away
+  }
+
+  function showThanks(p, picked) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    intro.textContent = 'Your vote is in.';
+    var pendingNote = (you && you.member === false)
+      ? '<p class="join-b" style="margin-top:10px">One more thing: we still can\u2019t find you on the membership list, so an admin will confirm you before this one is counted. Your answer is safe in the meantime.</p>'
+      : '<p class="join-b" style="margin-top:10px">You can change your answer any time until this poll closes.</p>';
+
+    screen.innerHTML = whoBar() +
+      '<div class="card" style="text-align:center">' +
+        '<div class="tick">\u2713</div>' +
+        '<div class="thanks-t">Salamat, Fam! \uD83D\uDC9A</div>' +
+        '<p class="join-b">Your vote on <b>\u201C' + esc(p.question) + '\u201D</b> has been recorded:</p>' +
+        '<div class="picked">' + picked.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' +
+        pendingNote +
+        '<button class="btn" id="tback">Back to the polls</button>' +
+      '</div>';
+
+    document.getElementById('out').onclick = signOut;
+    document.getElementById('tback').onclick = function () { showList(''); };
+  }
+
+  // reload the polls without disturbing whatever is on screen
+  function refresh() {
+    var cb = 'pulseRef' + Date.now();
+    window[cb] = function (d) {
+      if (d && d.ok) { polls = d.polls || polls; you = d.you || you; }
+    };
+    var tag = document.createElement('script');
+    tag.src = PULSE_URL + (PULSE_URL.indexOf('?') > -1 ? '&' : '?') +
+              'view=polls&handle=' + encodeURIComponent(me.handle) +
+              '&email=' + encodeURIComponent(me.email) +
+              '&callback=' + cb + '&_=' + Date.now();
+    document.body.appendChild(tag);
   }
 
   /* ---------- suggest a poll ---------- */
